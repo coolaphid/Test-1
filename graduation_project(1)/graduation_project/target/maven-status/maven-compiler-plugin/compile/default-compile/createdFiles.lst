@@ -1,0 +1,5 @@
+com\example\graduation_project\service\FileService.class
+com\example\graduation_project\GraduationProjectApplication.class
+com\example\graduation_project\controller\FileController.class
+com\example\graduation_project\model\Article.class
+com\example\graduation_project\repository\ArticleRepository.class
