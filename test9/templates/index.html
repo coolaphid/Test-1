@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级网页爬虫</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f4f9;
+        }
+
+       .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #fff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 0.5rem;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            font-size: 2.25rem;
+            font-weight: 700;
+        }
+
+        #input-section {
+            margin-bottom: 1.5rem;
+        }
+
+        #urls {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        #urls:focus {
+            outline: none;
+            border-color: #63b3ed;
+            box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.25);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background-color: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #3182ce;
+        }
+
+        #loading {
+            display: none;
+            color: #63b3ed;
+            margin-bottom: 1rem;
+        }
+
+        #result-section {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            background-color: white;
+            min-height: 200px;
+            overflow-y: auto;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="flex justify-between mb-4">
+            <button onclick="window.location.href='/admin'">进入管理页面</button>
+            <button onclick="window.location.href='/logout'">退出登录</button>
+        </div>
+        <h1 class="text-2xl font-bold">高级网页爬取工具</h1>
+        <div id="input-section">
+            <textarea id="urls" placeholder="请输入要爬取的URL列表，每行一个URL"></textarea>
+            <button onclick="startCrawl()">开始爬取</button>
+        </div>
+        <div id="loading">正在爬取中...</div>
+        <div id="result-section" class="fade-in"></div>
+    </div>
+    <script>
+        async function startCrawl() {
+            const urlsInput = document.getElementById('urls').value;
+            const urls = urlsInput.split('\n').filter(url => url.trim()!== '');
+            const resultDiv = document.getElementById('result-section');
+            const loading = document.getElementById('loading');
+
+            if (urls.length === 0) {
+                alert('请输入有效的URL列表');
+                return;
+            }
+
+            loading.style.display = 'block';
+            resultDiv.innerHTML = '';
+
+            try {
+                const response = await fetch('/crawl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ urls: urls })
+                });
+
+                const results = await response.json();
+                if (response.ok) {
+                    results.forEach(result => {
+                        if (result.error) {
+                            resultDiv.innerHTML += `<p class="text-red-500">错误: ${result.error}</p>`;
+                        } else {
+                            let resultHTML = `<h2 class="text-lg font-bold">网页标题: </h2><p>${result.title}</p>`;
+                            resultHTML += `<h2 class="text-lg font-bold">网页内容: </h2><p>${result.content}</p>`;
+                            resultHTML += `<h2 class="text-lg font-bold">网页链接: </h2><ul>`;
+                            result.links.forEach(link => {
+                                resultHTML += `<li><a href="${link}" target="_blank" class="text-blue-500 hover:underline">${link}</a></li>`;
+                            });
+                            resultHTML += `</ul>`;
+                            resultDiv.innerHTML += resultHTML;
+                        }
+                    });
+                } else {
+                    resultDiv.innerHTML = `错误: ${results.error}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `请求失败: ${error}`;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>
